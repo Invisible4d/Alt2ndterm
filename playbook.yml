@@ -1,0 +1,33 @@
+---
+- name: Execute bash script and verify PHP application
+  hosts: Slave
+  tasks:
+    - name: Transfer the bash script to the Slave node
+      copy:
+        src: /home/vagrant/deploy.sh
+        dest: /tmp/deploy.sh
+        mode: 0755  
+
+    - name: Execute the bash script on the Slave node
+      shell: /tmp/deploy.sh
+      become: yes
+
+    - name: Verify PHP application accessibility
+      uri:
+        url: http://192.168.50.104  
+        return_content: yes
+      register: php_app_response
+
+    - name: Print PHP application response
+      debug:
+        msg: "{{ php_app_response }}"
+- name: Create a cron job to check server uptime
+  hosts: Slave
+  tasks:
+    - name: Add cron job to check server uptime
+      cron:
+        name: Check server uptime
+        minute: 0
+        hour: 0
+        job: /home/vagrant/deploy.sh  
+        state: present
